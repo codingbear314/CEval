@@ -25,6 +25,10 @@ using std::string;
 using std::deque;
 using std::map;
 
+/**
+ * @class Eval
+ * @brief A C++ Evaluation class
+*/
 class Eval
 {
 private:
