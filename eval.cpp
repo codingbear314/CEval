@@ -5,14 +5,13 @@
  * The goal is to make the code as simple as possible, since the last version
  * was over-complicated
  *
- * This library would NOT support string maniplications; use the CEval.h v3.0 to
- * do string maniplications
+ * This library would NOT support string maniplications.
  *
  * Code written by Jaewook Jung, 2023
  *
  * visit by blog! bit.ly/codingbear314
  *
- * @version 1.0
+ * @version 1.3
  * @author Jaewook Jung
  * @date 2023/08/14
  */
@@ -83,6 +82,14 @@ double Eval::operator()(string Expression)
  * Then, the code will iterate through the deque and add/subtract the numbers
  * and store them back at the front of the deque, untill there is only one left.
  * Finally the code will return the left number.
+ *
+ * Those steps are done by several helper functions;
+ * Eval::Tokenize
+ * Eval::CalculatePriority
+ * Eval::CalculatePlusMinus
+ *
+ * So, if you want to look how the code works, look at those functions.
+ *
  * @param Expression A string that would be evaluated
  * @return The result of the evaluation
  */
@@ -103,6 +110,17 @@ double Eval::Evaluate(string Expression)
     return this->CalculatePlusMinus(operands2, operators2);
 }
 
+/**
+ * @brief A helper function for Eval::Evaluate
+ * @details The code will split the Expression by operators
+ * If the Expression includes brackets, it will call Eval::Evaluate to calculate
+ * inside the bracket. This function supports variables.
+ *
+ * @param Expression A string that would be evaluated
+ * @param operands A reference to store tokenized operands
+ * @param operators A reference to store tokenized operators
+ * @return void; since all the values are stored by reference
+ */
 void Eval::Tokenize(const string &Expression, deque<double> &operands,
                     deque<char> &operators)
 {
@@ -176,6 +194,18 @@ void Eval::Tokenize(const string &Expression, deque<double> &operands,
     return;
 }
 
+/**
+ * @brief A helper function for Eval::Evaluate
+ * @details The code will get a splited deque of operands, operators, and
+ * calculate * and /. And finally, The code will store the results in operands2
+ * and operators2
+ *
+ * @param operands Tokenized operands
+ * @param operators Tokenized operators
+ * @param operands2 A reference to store calculated operands
+ * @param operators2 A reference to store calculated operators
+ * @return void; since all the values are stored by reference
+ */
 void Eval::CalculatePriority(deque<double> &operands, deque<char> &operators,
                              deque<double> &operands2, deque<char> &operators2)
 {
@@ -197,7 +227,7 @@ void Eval::CalculatePriority(deque<double> &operands, deque<char> &operators,
             break;
         case '/':
             if (n == 0)
-                std::invalid_argument("Can't divide by 0");
+                throw std::invalid_argument("Can't divide by 0");
             operands2.back() /= n;
             break;
         }
@@ -213,6 +243,15 @@ void Eval::CalculatePriority(deque<double> &operands, deque<char> &operators,
     return;
 }
 
+/**
+ * @brief A helper function for Eval::Evaluate
+ * @details The code will get a splited deque of operands, operators, and
+ * calculate + and -. And finally, The code will return the calculated results.
+ *
+ * @param operands Tokenized operands
+ * @param operators Tokenized operators
+ * @return The calculated answer in double
+ */
 double Eval::CalculatePlusMinus(deque<double> &operands, deque<char> &operators)
 {
     while (operands.size() > 1)

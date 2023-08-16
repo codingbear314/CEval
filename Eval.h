@@ -22,8 +22,8 @@
 
 #include <deque>
 #include <map>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 using std::deque;
 using std::map;
