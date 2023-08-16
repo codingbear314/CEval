@@ -29,7 +29,7 @@ Eval::Eval(void) {}
  * @brief A constructer that copies the variable list.
  * @param variables the list of variables in a map
  */
-Eval::Eval(map<string, double> variables) : Variables(variables) {}
+Eval::Eval(std::map<std::string, double> variables) : Variables(variables) {}
 
 /**
  * @brief Add a variable to the object.
@@ -37,7 +37,7 @@ Eval::Eval(map<string, double> variables) : Variables(variables) {}
  * @param value The value of the variable
  * @return void
  */
-void Eval::AddVariable(string name, double value)
+void Eval::AddVariable(std::string name, double value)
 {
     this->Variables.emplace(name, value);
     return;
@@ -47,7 +47,7 @@ void Eval::AddVariable(string name, double value)
  * @brief A function that returns the whole variable list.
  * @return The whole list of variables
  */
-const map<string, double> &Eval::GetVariableList(void)
+const std::map<std::string, double> &Eval::GetVariableList(void)
 {
     return this->Variables;
 }
@@ -57,7 +57,7 @@ const map<string, double> &Eval::GetVariableList(void)
  * @param VariableName The name of the variable
  * @return A reference of the variable so you could modify it
  */
-double &Eval::operator[](string VariableName)
+double &Eval::operator[](std::string VariableName)
 {
     return this->Variables[VariableName];
 }
@@ -69,7 +69,7 @@ double &Eval::operator[](string VariableName)
  * @param Expression A string that would be evaluated
  * @return The result of the evaluation
  */
-double Eval::operator()(string Expression)
+double Eval::operator()(std::string Expression)
 {
     return this->Evaluate(Expression);
 }
@@ -93,16 +93,16 @@ double Eval::operator()(string Expression)
  * @param Expression A string that would be evaluated
  * @return The result of the evaluation
  */
-double Eval::Evaluate(string Expression)
+double Eval::Evaluate(std::string Expression)
 {
-    deque<double> operands;
-    deque<char> operators;
+    std::deque<double> operands;
+    std::deque<char> operators;
 
     this->Tokenize(Expression, operands, operators);
 
     // Now calculate the * and /
-    deque<double> operands2;
-    deque<char> operators2;
+    std::deque<double> operands2;
+    std::deque<char> operators2;
 
     this->CalculatePriority(operands, operators, operands2, operators2);
 
@@ -121,10 +121,10 @@ double Eval::Evaluate(string Expression)
  * @param operators A reference to store tokenized operators
  * @return void; since all the values are stored by reference
  */
-void Eval::Tokenize(const string &Expression, deque<double> &operands,
-                    deque<char> &operators)
+void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
+                    std::deque<char> &operators)
 {
-    string buffer = "";
+    std::string buffer = "";
     char type = 'N'; // N:Number V:Variable B:Brackets
     int openedbrackets = 0;
     for (int i = 0; i < Expression.length(); i++)
@@ -206,8 +206,10 @@ void Eval::Tokenize(const string &Expression, deque<double> &operands,
  * @param operators2 A reference to store calculated operators
  * @return void; since all the values are stored by reference
  */
-void Eval::CalculatePriority(deque<double> &operands, deque<char> &operators,
-                             deque<double> &operands2, deque<char> &operators2)
+void Eval::CalculatePriority(std::deque<double> &operands,
+                             std::deque<char> &operators,
+                             std::deque<double> &operands2,
+                             std::deque<char> &operators2)
 {
     char lastoperator = operators.front();
     operands2.push_back(operands.front());
@@ -252,7 +254,8 @@ void Eval::CalculatePriority(deque<double> &operands, deque<char> &operators,
  * @param operators Tokenized operators
  * @return The calculated answer in double
  */
-double Eval::CalculatePlusMinus(deque<double> &operands, deque<char> &operators)
+double Eval::CalculatePlusMinus(std::deque<double> &operands,
+                                std::deque<char> &operators)
 {
     while (operands.size() > 1)
     {

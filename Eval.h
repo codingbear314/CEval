@@ -25,10 +25,6 @@
 #include <stdexcept>
 #include <string>
 
-using std::deque;
-using std::map;
-using std::string;
-
 /**
  * @class Eval
  * @brief A C++ Evaluation class
@@ -36,24 +32,25 @@ using std::string;
 class Eval
 {
   private:
-    map<string, double> Variables;
-    void Tokenize(const string &, deque<double> &, deque<char> &);
-    void CalculatePriority(deque<double> &, deque<char> &, deque<double> &,
-                           deque<char> &);
-    double CalculatePlusMinus(deque<double> &, deque<char> &);
+    std::map<std::string, double> Variables;
+    void Tokenize(const std::string &, std::deque<double> &,
+                  std::deque<char> &);
+    void CalculatePriority(std::deque<double> &, std::deque<char> &,
+                           std::deque<double> &, std::deque<char> &);
+    double CalculatePlusMinus(std::deque<double> &, std::deque<char> &);
 
   public:
     Eval(void);
-    Eval(map<string, double>);
+    Eval(std::map<std::string, double>);
 
-    void AddVariable(string, double);
+    void AddVariable(std::string, double);
 
-    const map<string, double> &GetVariableList(void);
+    const std::map<std::string, double> &GetVariableList(void);
 
-    double Evaluate(string);
+    double Evaluate(std::string);
 
-    double &operator[](string); // Get Variable Reference
-    double operator()(string);  // Evaluate
+    double &operator[](std::string); // Get Variable Reference
+    double operator()(std::string);  // Evaluate
 };
 #include "eval.cpp"
 #endif
