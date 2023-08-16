@@ -34,10 +34,10 @@ class Eval
   private:
     std::map<std::string, double> Variables;
     void Tokenize(const std::string &, std::deque<double> &,
-                  std::deque<char> &);
+                  std::deque<char> &) const;
     void CalculatePriority(std::deque<double> &, std::deque<char> &,
-                           std::deque<double> &, std::deque<char> &);
-    double CalculatePlusMinus(std::deque<double> &, std::deque<char> &);
+                           std::deque<double> &, std::deque<char> &) const;
+    double CalculatePlusMinus(std::deque<double> &, std::deque<char> &) const;
 
   public:
     Eval(void);
@@ -45,12 +45,12 @@ class Eval
 
     void AddVariable(std::string, double);
 
-    const std::map<std::string, double> &GetVariableList(void);
+    const std::map<std::string, double> &GetVariableList(void) const;
 
-    double Evaluate(std::string);
+    double Evaluate(std::string) const;
 
-    double &operator[](std::string); // Get Variable Reference
-    double operator()(std::string);  // Evaluate
+    double &operator[](std::string);      // Get Variable Reference
+    double operator()(std::string) const; // Evaluate
 };
 #include "eval.cpp"
 #endif

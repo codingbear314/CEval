@@ -47,7 +47,7 @@ void Eval::AddVariable(std::string name, double value)
  * @brief A function that returns the whole variable list.
  * @return The whole list of variables
  */
-const std::map<std::string, double> &Eval::GetVariableList(void)
+const std::map<std::string, double> &Eval::GetVariableList(void) const
 {
     return this->Variables;
 }
@@ -69,7 +69,7 @@ double &Eval::operator[](std::string VariableName)
  * @param Expression A string that would be evaluated
  * @return The result of the evaluation
  */
-double Eval::operator()(std::string Expression)
+double Eval::operator()(std::string Expression) const
 {
     return this->Evaluate(Expression);
 }
@@ -93,7 +93,7 @@ double Eval::operator()(std::string Expression)
  * @param Expression A string that would be evaluated
  * @return The result of the evaluation
  */
-double Eval::Evaluate(std::string Expression)
+double Eval::Evaluate(std::string Expression) const
 {
     std::deque<double> operands;
     std::deque<char> operators;
@@ -122,7 +122,7 @@ double Eval::Evaluate(std::string Expression)
  * @return void; since all the values are stored by reference
  */
 void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
-                    std::deque<char> &operators)
+                    std::deque<char> &operators) const
 {
     std::string buffer = "";
     char type = 'N'; // N:Number V:Variable B:Brackets
@@ -209,7 +209,7 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
 void Eval::CalculatePriority(std::deque<double> &operands,
                              std::deque<char> &operators,
                              std::deque<double> &operands2,
-                             std::deque<char> &operators2)
+                             std::deque<char> &operators2) const
 {
     char lastoperator = operators.front();
     operands2.push_back(operands.front());
@@ -255,7 +255,7 @@ void Eval::CalculatePriority(std::deque<double> &operands,
  * @return The calculated answer in double
  */
 double Eval::CalculatePlusMinus(std::deque<double> &operands,
-                                std::deque<char> &operators)
+                                std::deque<char> &operators) const
 {
     while (operands.size() > 1)
     {
