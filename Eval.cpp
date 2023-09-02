@@ -149,8 +149,14 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
                     operands.push_back(std::stod(buffer));
                     break;
                 case 'V':
-                    operands.push_back(this->Variables[buffer]);
+                {
+                    auto finder = Variables.find(buffer);
+                    if (finder == Variables.end())
+                        throw std::invalid_argument("Variable \'" + buffer +
+                                                    "\' not found");
+                    operands.push_back(finder->second);
                     break;
+                }
                 case 'B':
                     // There is a bracket, so it re-call itself to compute
                     // inside the bracket.
@@ -170,7 +176,7 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
         if ((('A' <= chnow && chnow <= 'Z') ||
              ('a' <= chnow && chnow <= 'z')) &&
             type != 'B')
-            type = 'N';
+            type = 'V';
         else if (chnow == '(' || chnow == ')')
             type = 'B';
         if (chnow == '(')
@@ -184,8 +190,14 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
         operands.push_back(std::stod(buffer));
         break;
     case 'V':
-        operands.push_back(this->Variables[buffer]);
+    {
+        auto finder = Variables.find(buffer);
+        if (finder == Variables.end())
+            throw std::invalid_argument("Variable \'" + buffer +
+                                        "\' not found");
+        operands.push_back(finder->second);
         break;
+    }
     case 'B':
         operands.push_back(
             this->Evaluate(buffer.substr(1, buffer.length() - 2)));
