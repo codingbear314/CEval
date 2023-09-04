@@ -1,19 +1,19 @@
 /**
- * Eval.h & Eval.cpp
+ * EvalFunction.h & EvalFunction.cpp
  *
- * Continued project from CEval.h v 3.0
- * The goal is to make the code as simple as possible, since the last version
- * was over-complicated
+ * A simple way of evaluating functions
+ * This library supports functions
  *
- * This library would NOT support string maniplications.
+ * This library only support double types
+ * I'll try to add a version that supports string asap
  *
  * Code written by Jaewook Jung, 2023
  *
  * visit by blog! bit.ly/codingbear314
  *
- * @version 1.3
+ * @version 1.5
  * @author Jaewook Jung
- * @date 2023/08/14
+ * @date 2023/09/04
  */
 
 #include "Eval.h"
@@ -32,6 +32,42 @@ Eval::Eval(void) {}
 Eval::Eval(std::map<std::string, double> variables) : Variables(variables) {}
 
 /**
+ * @brief A constructer that copies the Function list.
+ * @param functions the list of functions in a map
+ */
+Eval::Eval(
+    std::map<std::string,
+             std::pair<std::function<double(const std::vector<double> &)>, int>>
+        functions)
+    : Functions(functions)
+{
+}
+
+/**
+ * @brief A constructer that copies the Variable & Function list.
+ * @param variables the list of variables in a map
+ * @param functions the list of functions in a map
+ */
+Eval::Eval(
+    std::map<std::string, double> variables,
+    std::map<std::string,
+             std::pair<std::function<double(const std::vector<double> &)>, int>>
+        functions)
+    : Variables(variables), Functions(functions)
+{
+}
+
+/**
+ * @brief A copy constructer
+ * @param original Original object
+ */
+Eval::Eval(const Eval &original)
+{
+    this->Functions = original.Functions;
+    this->Variables = original.Variables;
+}
+
+/**
  * @brief Add a variable to the object.
  * @param name A name of the variable
  * @param value The value of the variable
@@ -40,6 +76,24 @@ Eval::Eval(std::map<std::string, double> variables) : Variables(variables) {}
 void Eval::AddVariable(std::string name, double value)
 {
     this->Variables.emplace(name, value);
+    return;
+}
+
+/**
+ * @brief Add a function to the object.
+ * @param name A name of the function
+ * @param function The function itself. must return double, and have only one
+ * vector<double> as a input.
+ * @param parameters The number of parameters. Set to -1 in default, which will
+ * ignore checking the number of parameters.
+ * @return void
+ */
+void Eval::AddFunction(
+    std::string name,
+    std::function<double(const std::vector<double> &)> function,
+    int parameters = -1)
+{
+    this->Functions.emplace(name, make_pair(function, parameters));
     return;
 }
 
@@ -125,6 +179,7 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
                     std::deque<char> &operators) const
 {
     std::string buffer = "";
+    std::string bracketBuffer = "";
     char type = 'N'; // N:Number V:Variable B:Brackets
     int openedbrackets = 0;
     for (int i = 0; i < Expression.length(); i++)
@@ -135,6 +190,7 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
             continue;
 
         if (openedbrackets == 0)
+        {
             switch (chnow)
             {
             // switch without break is used just to know if chnow is an operator
@@ -158,20 +214,30 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
                     break;
                 }
                 case 'B':
-                    // There is a bracket, so it re-call itself to compute
-                    // inside the bracket.
-                    operands.push_back(
-                        this->Evaluate(buffer.substr(1, buffer.length() - 2)));
+                    if (buffer.empty())
+                    {
+                        // There is a bracket, so it re-call itself to compute
+                        // inside the bracket.
+                        operands.push_back(Evaluate(bracketBuffer.substr(
+                            1, bracketBuffer.length() - 2)));
+                    }
+                    else
+                    {
+                        // This is a function
+                        operands.push_back(this->RunFunction(
+                            buffer, bracketBuffer.substr(
+                                        1, bracketBuffer.length() - 2)));
+                    }
                     break;
                 }
                 operators.push_back(chnow);
 
-                buffer = "";
+                buffer.clear();
+                bracketBuffer.clear();
                 type = 'N';
                 continue;
             }
-
-        buffer.push_back(chnow);
+        }
 
         if ((('A' <= chnow && chnow <= 'Z') ||
              ('a' <= chnow && chnow <= 'z')) &&
@@ -183,6 +249,16 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
             openedbrackets++;
         else if (chnow == ')')
             openedbrackets--;
+
+        switch (type)
+        {
+        case 'B':
+            bracketBuffer.push_back(chnow);
+            break;
+        default:
+            buffer.push_back(chnow);
+            break;
+        }
     }
     switch (type)
     {
@@ -199,8 +275,19 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
         break;
     }
     case 'B':
-        operands.push_back(
-            this->Evaluate(buffer.substr(1, buffer.length() - 2)));
+        if (buffer.empty())
+        {
+            // There is a bracket, so it re-call itself to compute
+            // inside the bracket.
+            operands.push_back(
+                Evaluate(bracketBuffer.substr(1, bracketBuffer.length() - 2)));
+        }
+        else
+        {
+            // This is a function
+            operands.push_back(this->RunFunction(
+                buffer, bracketBuffer.substr(1, bracketBuffer.length() - 2)));
+        }
         break;
     }
     return;
@@ -282,4 +369,86 @@ double Eval::CalculatePlusMinus(std::deque<double> &operands,
     }
 
     return operands[0];
+}
+
+// Custom functions; made at 2023 09 03
+
+/**
+ * @brief This is a main function, that will tokenize the args and call a
+ * function
+ * @param name The name of the function
+ * @param args The args of a function in a form of "number, number, ..."
+ * @return The return value of the called function
+ */
+double Eval::RunFunction(std::string name, std::string args) const
+{
+    std::vector<double> Tokenized;
+    this->TokenizeArgs(args, Tokenized);
+    return this->TestAndRunFunction(name, Tokenized);
+}
+
+/**
+ * @brief This is a helper function for RunFunction; It will make a string in a
+ * form of "number, number" to a vector
+ * @param Expression The expression in a form of "number, number"
+ * @param args The return vector
+ */
+void Eval::TokenizeArgs(std::string Expression, std::vector<double> &args) const
+{
+    int brackets = 0;
+    std::string buffer = "";
+    for (int i = 0; i < Expression.length(); i++)
+    {
+        char point = Expression[i];
+        if (point == ' ' || point == '\t')
+            continue;
+
+        if (point == ',' && brackets == 0)
+        {
+            if (buffer.empty())
+                throw std::invalid_argument(
+                    "No args after \',\' or no args at all");
+            args.push_back(this->Evaluate(buffer));
+            buffer.clear();
+            continue;
+        }
+
+        buffer.push_back(point);
+
+        if (point == '(')
+        {
+            brackets++;
+            continue;
+        }
+        else if (point == ')')
+        {
+            brackets--;
+            if (brackets < 0)
+                throw std::invalid_argument("Invalid use of brackets");
+            continue;
+        }
+    }
+    if (buffer.empty())
+        throw std::invalid_argument("No args after \',\' or no args at all");
+    args.push_back(this->Evaluate(buffer));
+    return;
+}
+
+/**
+ * @brief This is a helper function for RunFunction; It will check that
+ * everything is ok and call the function
+ * @param name The name of the function
+ * @param args The vector with args
+ */
+double Eval::TestAndRunFunction(std::string name,
+                                const std::vector<double> &args) const
+{
+    auto finder = Functions.find(name);
+    if (finder == Functions.end())
+        throw std::invalid_argument("The function \'" + name +
+                                    "\' does not exist");
+    if (args.size() != (finder->second).second)
+        throw std::invalid_argument(
+            "The numbers of the arguments do not match");
+    return (finder->second).first(args);
 }

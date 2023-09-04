@@ -2,10 +2,21 @@
  * This is a simple example program of Eval.h
  */
 #include "Eval.h"
+#include <cmath>
 #include <string.h>
+
+using namespace std;
+
+// Example functions
+double powerE(vector<double> lt) { return pow(lt[0], lt[1]); }
+double sqrtE(vector<double> lt) { return sqrt(lt[0]); }
+
 int main()
 {
     Eval eval;
+    eval.AddFunction("pow", powerE, 2);
+    eval.AddFunction("sqrt", sqrtE, 1);
+
     while (true)
     {
         char cmd[10] = {0};
@@ -30,15 +41,9 @@ int main()
         {
             break;
         }
-        else if (strcmp(cmd, "calculate") == 0)
-        {
-            char Expression[100] = {0};
-            scanf("%s", Expression);
-            printf("Answer: %g\n", eval(Expression));
-        }
         else
         {
-            printf("%s is not a valid command. Please try again.\n", cmd);
+            printf("Answer: %g\n", eval(cmd));
         }
     }
     return 0;
