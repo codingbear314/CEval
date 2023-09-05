@@ -1,11 +1,9 @@
 /**
- * EvalFunction.h & EvalFunction.cpp
+ * EvalString.h & EvalString.cpp
  *
  * A simple way of evaluating functions
  * This library supports functions
- *
- * This library only support double types
- * I'll try to add a version that supports string asap
+ * This is a version that supports strings
  *
  * Code written by Jaewook Jung, 2023
  *
@@ -16,8 +14,10 @@
  * @date 2023/09/04
  */
 
-#include "Eval.h"
+#include "EvalString.h"
 
+namespace expreval
+{
 // constructers
 
 /**
@@ -29,15 +29,16 @@ Eval::Eval(void) {}
  * @brief A constructer that copies the variable list.
  * @param variables the list of variables in a map
  */
-Eval::Eval(std::map<std::string, double> variables) : Variables(variables) {}
+Eval::Eval(std::map<std::string, DataType> variables) : Variables(variables) {}
 
 /**
  * @brief A constructer that copies the Function list.
  * @param functions the list of functions in a map
  */
 Eval::Eval(
-    std::map<std::string,
-             std::pair<std::function<double(const std::vector<double> &)>, int>>
+    std::map<
+        std::string,
+        std::pair<std::function<DataType(const std::vector<DataType> &)>, int>>
         functions)
     : Functions(functions)
 {
@@ -49,9 +50,10 @@ Eval::Eval(
  * @param functions the list of functions in a map
  */
 Eval::Eval(
-    std::map<std::string, double> variables,
-    std::map<std::string,
-             std::pair<std::function<double(const std::vector<double> &)>, int>>
+    std::map<std::string, DataType> variables,
+    std::map<
+        std::string,
+        std::pair<std::function<DataType(const std::vector<DataType> &)>, int>>
         functions)
     : Variables(variables), Functions(functions)
 {
@@ -73,7 +75,7 @@ Eval::Eval(const Eval &original)
  * @param value The value of the variable
  * @return void
  */
-void Eval::AddVariable(std::string name, double value)
+void Eval::AddVariable(std::string name, DataType value)
 {
     this->Variables.emplace(name, value);
     return;
@@ -82,15 +84,15 @@ void Eval::AddVariable(std::string name, double value)
 /**
  * @brief Add a function to the object.
  * @param name A name of the function
- * @param function The function itself. must return double, and have only one
- * vector<double> as a input.
+ * @param function The function itself. must return DataType, and have only one
+ * vector<DataType> as a input.
  * @param parameters The number of parameters. Set to -1 in default, which will
  * ignore checking the number of parameters.
  * @return void
  */
 void Eval::AddFunction(
     std::string name,
-    std::function<double(const std::vector<double> &)> function,
+    std::function<DataType(const std::vector<DataType> &)> function,
     int parameters = -1)
 {
     this->Functions.emplace(name, make_pair(function, parameters));
@@ -101,7 +103,7 @@ void Eval::AddFunction(
  * @brief A function that returns the whole variable list.
  * @return The whole list of variables
  */
-const std::map<std::string, double> &Eval::GetVariableList(void) const
+const std::map<std::string, DataType> &Eval::GetVariableList(void) const
 {
     return this->Variables;
 }
@@ -111,7 +113,7 @@ const std::map<std::string, double> &Eval::GetVariableList(void) const
  * @param VariableName The name of the variable
  * @return A reference of the variable so you could modify it
  */
-double &Eval::operator[](std::string VariableName)
+DataType &Eval::operator[](std::string VariableName)
 {
     return this->Variables[VariableName];
 }
@@ -123,7 +125,7 @@ double &Eval::operator[](std::string VariableName)
  * @param Expression A string that would be evaluated
  * @return The result of the evaluation
  */
-double Eval::operator()(std::string Expression) const
+DataType Eval::operator()(std::string Expression) const
 {
     return this->Evaluate(Expression);
 }
@@ -147,15 +149,15 @@ double Eval::operator()(std::string Expression) const
  * @param Expression A string that would be evaluated
  * @return The result of the evaluation
  */
-double Eval::Evaluate(std::string Expression) const
+DataType Eval::Evaluate(std::string Expression) const
 {
-    std::deque<double> operands;
+    std::deque<DataType> operands;
     std::deque<char> operators;
 
     this->Tokenize(Expression, operands, operators);
 
     // Now calculate the * and /
-    std::deque<double> operands2;
+    std::deque<DataType> operands2;
     std::deque<char> operators2;
 
     this->CalculatePriority(operands, operators, operands2, operators2);
@@ -175,21 +177,23 @@ double Eval::Evaluate(std::string Expression) const
  * @param operators A reference to store tokenized operators
  * @return void; since all the values are stored by reference
  */
-void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
+void Eval::Tokenize(const std::string &Expression,
+                    std::deque<DataType> &operands,
                     std::deque<char> &operators) const
 {
     std::string buffer = "";
     std::string bracketBuffer = "";
-    char type = 'N'; // N:Number V:Variable B:Brackets
+    char type = 'N'; // N:Number V:Variable B:Brackets S:String
     int openedbrackets = 0;
+    bool InsideString = false;
     for (int i = 0; i < Expression.length(); i++)
     {
         char chnow = Expression[i];
 
-        if (chnow == ' ') // So the code could handle 1 + 1
+        if (chnow == ' ' && !InsideString) // So the code could handle 1 + 1
             continue;
 
-        if (openedbrackets == 0)
+        if (openedbrackets == 0 && !InsideString)
         {
             switch (chnow)
             {
@@ -229,6 +233,9 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
                                         1, bracketBuffer.length() - 2)));
                     }
                     break;
+                case 'S':
+                    operands.push_back(buffer.substr(1, buffer.length() - 2));
+                    break;
                 }
                 operators.push_back(chnow);
 
@@ -241,24 +248,24 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
 
         if ((('A' <= chnow && chnow <= 'Z') ||
              ('a' <= chnow && chnow <= 'z')) &&
-            type != 'B')
+            type != 'B' && type != 'S')
             type = 'V';
-        else if (chnow == '(' || chnow == ')')
+        else if ((chnow == '(' || chnow == ')') && type != 'S')
             type = 'B';
-        if (chnow == '(')
+        else if (chnow == '\"' && type != 'B')
+        {
+            type = 'S';
+            InsideString = !InsideString;
+        }
+        if (chnow == '(' && !InsideString)
             openedbrackets++;
-        else if (chnow == ')')
+        else if (chnow == ')' && !InsideString)
             openedbrackets--;
 
-        switch (type)
-        {
-        case 'B':
+        if (type == 'B')
             bracketBuffer.push_back(chnow);
-            break;
-        default:
+        else
             buffer.push_back(chnow);
-            break;
-        }
     }
     switch (type)
     {
@@ -289,6 +296,9 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
                 buffer, bracketBuffer.substr(1, bracketBuffer.length() - 2)));
         }
         break;
+    case 'S':
+        operands.push_back(buffer.substr(1, buffer.length() - 2));
+        break;
     }
     return;
 }
@@ -305,9 +315,9 @@ void Eval::Tokenize(const std::string &Expression, std::deque<double> &operands,
  * @param operators2 A reference to store calculated operators
  * @return void; since all the values are stored by reference
  */
-void Eval::CalculatePriority(std::deque<double> &operands,
+void Eval::CalculatePriority(std::deque<DataType> &operands,
                              std::deque<char> &operators,
-                             std::deque<double> &operands2,
+                             std::deque<DataType> &operands2,
                              std::deque<char> &operators2) const
 {
     char lastoperator = operators.front();
@@ -316,7 +326,7 @@ void Eval::CalculatePriority(std::deque<double> &operands,
         operators2.push_back(lastoperator);
     for (int i = 1; i < operands.size(); i++)
     {
-        double n = operands[i];
+        DataType n = operands[i];
         switch (lastoperator)
         {
         case '+':
@@ -324,12 +334,10 @@ void Eval::CalculatePriority(std::deque<double> &operands,
             operands2.push_back(n);
             break;
         case '*':
-            operands2.back() *= n;
+            operands2.back() = operands2.back() * n;
             break;
         case '/':
-            if (n == 0)
-                throw std::invalid_argument("Can't divide by 0");
-            operands2.back() /= n;
+            operands2.back() = operands2.back() / n;
             break;
         }
 
@@ -351,16 +359,16 @@ void Eval::CalculatePriority(std::deque<double> &operands,
  *
  * @param operands Tokenized operands
  * @param operators Tokenized operators
- * @return The calculated answer in double
+ * @return The calculated answer in DataType
  */
-double Eval::CalculatePlusMinus(std::deque<double> &operands,
-                                std::deque<char> &operators) const
+DataType Eval::CalculatePlusMinus(std::deque<DataType> &operands,
+                                  std::deque<char> &operators) const
 {
     while (operands.size() > 1)
     {
-        double operand1 = operands.front();
+        DataType operand1 = operands.front();
         operands.pop_front();
-        double operand2 = operands.front();
+        DataType operand2 = operands.front();
         operands.pop_front();
         char operator1 = operators.front();
         operators.pop_front();
@@ -380,9 +388,9 @@ double Eval::CalculatePlusMinus(std::deque<double> &operands,
  * @param args The args of a function in a form of "number, number, ..."
  * @return The return value of the called function
  */
-double Eval::RunFunction(std::string name, std::string args) const
+DataType Eval::RunFunction(std::string name, std::string args) const
 {
-    std::vector<double> Tokenized;
+    std::vector<DataType> Tokenized;
     this->TokenizeArgs(args, Tokenized);
     return this->TestAndRunFunction(name, Tokenized);
 }
@@ -393,7 +401,8 @@ double Eval::RunFunction(std::string name, std::string args) const
  * @param Expression The expression in a form of "number, number"
  * @param args The return vector
  */
-void Eval::TokenizeArgs(std::string Expression, std::vector<double> &args) const
+void Eval::TokenizeArgs(std::string Expression,
+                        std::vector<DataType> &args) const
 {
     int brackets = 0;
     std::string buffer = "";
@@ -440,8 +449,8 @@ void Eval::TokenizeArgs(std::string Expression, std::vector<double> &args) const
  * @param name The name of the function
  * @param args The vector with args
  */
-double Eval::TestAndRunFunction(std::string name,
-                                const std::vector<double> &args) const
+DataType Eval::TestAndRunFunction(std::string name,
+                                  const std::vector<DataType> &args) const
 {
     auto finder = Functions.find(name);
     if (finder == Functions.end())
@@ -452,3 +461,4 @@ double Eval::TestAndRunFunction(std::string name,
             "The numbers of the arguments do not match");
     return (finder->second).first(args);
 }
+} // namespace expreval

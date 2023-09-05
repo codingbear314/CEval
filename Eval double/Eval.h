@@ -1,7 +1,7 @@
 /**
- * EvalFunction.h & EvalFunction.cpp
+ * Eval.h & Eval.cpp
  *
- * A simple way of evaluating functions
+ * A simple way of evaluating expressions
  * This library supports functions
  *
  * This library only support double types
