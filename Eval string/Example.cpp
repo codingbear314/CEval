@@ -1,5 +1,5 @@
 /**
- * This is a simple example program of Eval.h
+ * This is a simple example program of EvalString.h
  */
 #include "EvalString.h"
 #include <cmath>

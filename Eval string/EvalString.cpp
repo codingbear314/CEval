@@ -1,17 +1,16 @@
 /**
  * EvalString.h & EvalString.cpp
  *
- * A simple way of evaluating functions
- * This library supports functions
- * This is a version that supports strings
+ * A simple way of evaluating expression
+ * This library supports string & functions
  *
  * Code written by Jaewook Jung, 2023
  *
  * visit by blog! bit.ly/codingbear314
  *
- * @version 1.5
+ * @version 2.0
  * @author Jaewook Jung
- * @date 2023/09/04
+ * @date 2023/09/05
  */
 
 #include "EvalString.h"

@@ -5,7 +5,6 @@
  * This library supports functions
  *
  * This library only support double types
- * I'll try to add a version that supports string asap
  *
  * Code written by Jaewook Jung, 2023
  *
